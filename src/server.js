@@ -1,8 +1,18 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { MongoClient } from "mongodb";
+import path from "path";
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, "/build")));
+app.use(bodyParser.json());
 
 const withDB = async (operations, res) => {
     try {
@@ -14,8 +24,6 @@ const withDB = async (operations, res) => {
         res.status(500).json({message: "Error connecting to DB", error});
     }
 }
-
-app.use(bodyParser.json());
 
 app.get("/api/articles/:name", async (req, res) => {
     await withDB(async (db) => {
@@ -60,6 +68,8 @@ app.post("/api/articles/:name/add-comment", async (req, res) => {
     }, res);
 });
 
-
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "/build/index.html"));
+})
 
 app.listen(8000, () => console.log("Listening on port 8000..."));
